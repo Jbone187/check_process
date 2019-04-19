@@ -1,19 +1,43 @@
-import subprocess
-import re
 import sys
+import psutil
 
 
-def run_process():
+def checkIfProcessRunning(processName):
 
-    proc = subprocess.check_output(['ps', 'aux'])
+    # Iterate over the all the running process
+    for proc in psutil.process_iter():
+        try:
+            # Check if process name contains the given name string.
+            if processName.lower() in proc.name().lower():
+                return True
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            pass
+    return False
 
-    decData = proc.decode("utf8")
 
-    if len(sys.argv) > 1:
-        string = re.findall(sys.argv[1], decData)
-        print(string)
+def kill_active_process():
+
+    # Checks for active process
+    if len(sys.argv) > 1 and checkIfProcessRunning(sys.argv[1]) == True:
+
+        checkIfProcessRunning(sys.argv[1])
+
+        print('Yes a ' + sys.argv[1] +
+              ' process was running and Services were Killed')
+
+        # Loops over name associated with process
+        for proc in psutil.process_iter(attrs=['pid', 'name']):
+
+            if sys.argv[1] in proc.info['name']:
+                proc.kill()
+                break
+            elif checkIfProcessRunning(sys.argv[1]) == False:
+
+                print('No process ' + sys.argv[1] +
+                      ' is Not Running')
+
     else:
-        print("Please Add Argument")
+        print("No Data was Return on Process")
 
 
-run_process()
+kill_active_process()
